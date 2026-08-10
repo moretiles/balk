@@ -28,6 +28,9 @@ struct Settings {
     std::string binary = "";
     std::string build_system = "";
     std::string toolchain = "";
+    std::string formatter = "";
+    std::string linter = "";
+    std::string default_profile = "";
 
     Cmake cmake{};
 };
@@ -36,6 +39,8 @@ struct OverrideSettings {
     std::string binary = "";
     std::string build_system = "";
     std::string toolchain = "";
+    std::string formatter = "";
+    std::string linter = "";
 
     Cmake cmake{};
 };
@@ -58,30 +63,18 @@ struct FormatProgram {
     std::vector<std::string> appended_arguments = {};
 };
 
-struct Format {
-    std::string selected = "";
-    std::unordered_map<std::string, FormatProgram> known = {};
-};
-
 struct LintProgram {
     std::string binary = "";
     std::vector<std::string> preappended_arguments = {};
     std::vector<std::string> appended_arguments = {};
 };
 
-struct Lint {
-    std::string selected = "";
-    std::unordered_map<std::string, LintProgram> known = {};
-};
-
 struct BuildSystem {
-    std::string name = "";
     std::string build_type = "";
     std::string path = "";
 };
 
 struct Toolchain {
-    std::string name = "";
     std::string linker = "";
     std::string assembler = "";
     std::string c_compiler = "";
@@ -89,22 +82,15 @@ struct Toolchain {
 };
 
 struct Command {
-    std::string name = "";
     std::string binary = "";
     std::vector<std::string> preappended_arguments = {};
     std::vector<std::string> appended_arguments = {};
 };
 
 struct ProfileEntry {
-    std::string name = "";
     std::string path_within_build = "";
     std::string cmake_build_type = "Debug";
     OverrideSettings override_settings{};
-};
-
-struct Profiles {
-    std::string default_name = "";
-    std::unordered_map<std::string, ProfileEntry> known = {};
 };
 
 struct Config {
@@ -112,12 +98,12 @@ struct Config {
     UnchangableSettings unchangable_settings{};
     Settings settings{};
     Directories directories{};
-    Format format{};
-    Lint lint{};
+    std::unordered_map<std::string, FormatProgram> format = {};
+    std::unordered_map<std::string, LintProgram> lint = {};
     std::unordered_map<std::string, BuildSystem> build_systems = {};
     std::unordered_map<std::string, Toolchain> toolchains = {};
     std::unordered_map<std::string, Command> commands = {};
-    Profiles profiles{};
+    std::unordered_map<std::string, ProfileEntry> profiles = {};
 };
 
 const constexpr std::string_view config_schema = R"json(
@@ -150,10 +136,16 @@ const constexpr std::string_view config_schema = R"json(
       "$ref": "#/definitions/directories"
     },
     "format": {
-      "$ref": "#/definitions/format"
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/format_program"
+      }
     },
     "lint": {
-      "$ref": "#/definitions/lint"
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/lint_program"
+      }
     },
     "build_systems": {
       "type": "object",
@@ -174,7 +166,10 @@ const constexpr std::string_view config_schema = R"json(
       }
     },
     "profiles": {
-      "$ref": "#/definitions/profiles"
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/profile_entry"
+      }
     }
   },
 
@@ -223,12 +218,18 @@ const constexpr std::string_view config_schema = R"json(
         "binary",
         "build_system",
         "toolchain",
+        "formatter",
+        "linter",
+        "default_profile",
         "cmake"
       ],
       "properties": {
         "binary": {"$ref": "#/definitions/string"},
         "build_system": {"$ref": "#/definitions/string"},
         "toolchain": {"$ref": "#/definitions/string"},
+        "formatter": {"$ref": "#/definitions/string"},
+        "linter": {"$ref": "#/definitions/string"},
+        "default_profile": {"$ref": "#/definitions/string"},
         "cmake": {
           "$ref": "#/definitions/cmake"
         }
@@ -241,6 +242,8 @@ const constexpr std::string_view config_schema = R"json(
         "binary": {"$ref": "#/definitions/string"},
         "build_system": {"$ref": "#/definitions/string"},
         "toolchain": {"$ref": "#/definitions/string"},
+        "formatter": {"$ref": "#/definitions/string"},
+        "linter": {"$ref": "#/definitions/string"},
         "cmake": {
           "$ref": "#/definitions/cmake"
         }
@@ -293,23 +296,6 @@ const constexpr std::string_view config_schema = R"json(
       }
     },
 
-    "format": {
-      "type": "object",
-      "required": [
-        "selected",
-        "known"
-      ],
-      "properties": {
-        "selected": {"$ref": "#/definitions/string"},
-        "known": {
-          "type": "object",
-          "items": {
-            "$ref": "#/definitions/format_program"
-          }
-        }
-      }
-    },
-
     "lint_program": {
       "type": "object",
       "required": [
@@ -330,32 +316,13 @@ const constexpr std::string_view config_schema = R"json(
       }
     },
 
-    "lint": {
-      "type": "object",
-      "required": [
-        "selected",
-        "known"
-      ],
-      "properties": {
-        "selected": {"$ref": "#/definitions/string"},
-        "known": {
-          "type": "object",
-          "items": {
-            "$ref": "#/definitions/lint_program"
-          }
-        }
-      }
-    },
-
     "build_system": {
       "type": "object",
       "required": [
-        "name",
         "build_type",
         "path"
       ],
       "properties": {
-        "name": {"$ref": "#/definitions/string"},
         "build_type": {"$ref": "#/definitions/string"},
         "path": {"$ref": "#/definitions/string"}
       }
@@ -364,14 +331,12 @@ const constexpr std::string_view config_schema = R"json(
     "toolchain": {
       "type": "object",
       "required": [
-        "name",
         "linker",
         "assembler",
         "c_compiler",
         "cpp_compiler"
       ],
       "properties": {
-        "name": {"$ref": "#/definitions/string"},
         "linker": {"$ref": "#/definitions/string"},
         "assembler": {"$ref": "#/definitions/string"},
         "c_compiler": {"$ref": "#/definitions/string"},
@@ -382,13 +347,11 @@ const constexpr std::string_view config_schema = R"json(
     "command": {
       "type": "object",
       "required": [
-        "name",
         "binary",
         "preappended_arguments",
         "appended_arguments"
       ],
       "properties": {
-        "name": {"$ref": "#/definitions/string"},
         "binary": {"$ref": "#/definitions/string"},
         "preappended_arguments": {
           "type": "array",
@@ -404,34 +367,15 @@ const constexpr std::string_view config_schema = R"json(
     "profile_entry": {
       "type": "object",
       "required": [
-        "name",
         "path_within_build",
         "cmake_build_type",
         "override_settings"
       ],
       "properties": {
-        "name": {"$ref": "#/definitions/string"},
         "path_within_build": {"$ref": "#/definitions/string"},
         "cmake_build_type": {"$ref": "#/definitions/string"},
         "override_settings": {
           "$ref": "#/definitions/override_settings"
-        }
-      }
-    },
-
-    "profiles": {
-      "type": "object",
-      "required": [
-        "default_name",
-        "known"
-      ],
-      "properties": {
-        "default_name": {"$ref": "#/definitions/string"},
-        "known": {
-          "type": "object",
-          "items": {
-            "$ref": "#/definitions/profile_entry"
-          }
         }
       }
     }
@@ -474,6 +418,9 @@ inline void to_json(json& j, const Settings& v) {
         {"binary", v.binary},
         {"build_system", v.build_system},
         {"toolchain", v.toolchain},
+        {"formatter", v.formatter},
+        {"linter", v.linter},
+        {"default_profile", v.default_profile},
         {"cmake", v.cmake},
     };
 }
@@ -482,6 +429,9 @@ inline void from_json(const json& j, Settings& v) {
     j.at("binary").get_to(v.binary);
     j.at("build_system").get_to(v.build_system);
     j.at("toolchain").get_to(v.toolchain);
+    j.at("formatter").get_to(v.formatter);
+    j.at("linter").get_to(v.linter);
+    j.at("default_profile").get_to(v.default_profile);
     j.at("cmake").get_to(v.cmake);
 }
 
@@ -490,6 +440,8 @@ inline void to_json(json& j, const OverrideSettings& v) {
         {"binary", v.binary},
         {"build_system", v.build_system},
         {"toolchain", v.toolchain},
+        {"formatter", v.formatter},
+        {"linter", v.linter},
         {"cmake", v.cmake},
     };
 }
@@ -505,6 +457,14 @@ inline void from_json(const json& j, OverrideSettings& v) {
 
     if(j.contains("toolchain")) {
         j.at("toolchain").get_to(v.toolchain);
+    }
+
+    if(j.contains("formatter")) {
+        j.at("formatter").get_to(v.formatter);
+    }
+
+    if(j.contains("linter")) {
+        j.at("linter").get_to(v.linter);
     }
 
     if(j.contains("cmake")) {
@@ -552,18 +512,6 @@ inline void from_json(const json& j, FormatProgram& v) {
     j.at("appended_arguments").get_to(v.appended_arguments);
 }
 
-inline void to_json(json& j, const Format& v) {
-    j = json{
-        {"selected", v.selected},
-        {"known", v.known},
-    };
-}
-
-inline void from_json(const json& j, Format& v) {
-    j.at("selected").get_to(v.selected);
-    j.at("known").get_to(v.known);
-}
-
 inline void to_json(json& j, const LintProgram& v) {
     j = json{
         {"binary", v.binary},
@@ -578,35 +526,20 @@ inline void from_json(const json& j, LintProgram& v) {
     j.at("appended_arguments").get_to(v.appended_arguments);
 }
 
-inline void to_json(json& j, const Lint& v) {
-    j = json{
-        {"selected", v.selected},
-        {"known", v.known},
-    };
-}
-
-inline void from_json(const json& j, Lint& v) {
-    j.at("selected").get_to(v.selected);
-    j.at("known").get_to(v.known);
-}
-
 inline void to_json(json& j, const BuildSystem& v) {
     j = json{
-        {"name", v.name},
         {"build_type", v.build_type},
         {"path", v.path},
     };
 }
 
 inline void from_json(const json& j, BuildSystem& v) {
-    j.at("name").get_to(v.name);
     j.at("build_type").get_to(v.build_type);
     j.at("path").get_to(v.path);
 }
 
 inline void to_json(json& j, const Toolchain& v) {
     j = json{
-        {"name", v.name},
         {"linker", v.linker},
         {"assembler", v.assembler},
         {"c_compiler", v.c_compiler},
@@ -615,7 +548,6 @@ inline void to_json(json& j, const Toolchain& v) {
 }
 
 inline void from_json(const json& j, Toolchain& v) {
-    j.at("name").get_to(v.name);
     j.at("linker").get_to(v.linker);
     j.at("assembler").get_to(v.assembler);
     j.at("c_compiler").get_to(v.c_compiler);
@@ -624,7 +556,6 @@ inline void from_json(const json& j, Toolchain& v) {
 
 inline void to_json(json& j, const Command& v) {
     j = json{
-        {"name", v.name},
         {"binary", v.binary},
         {"preappended_arguments", v.preappended_arguments},
         {"appended_arguments", v.appended_arguments},
@@ -632,7 +563,6 @@ inline void to_json(json& j, const Command& v) {
 }
 
 inline void from_json(const json& j, Command& v) {
-    j.at("name").get_to(v.name);
     j.at("binary").get_to(v.binary);
     j.at("preappended_arguments").get_to(v.preappended_arguments);
     j.at("appended_arguments").get_to(v.appended_arguments);
@@ -640,7 +570,6 @@ inline void from_json(const json& j, Command& v) {
 
 inline void to_json(json& j, const ProfileEntry& v) {
     j = json{
-        {"name", v.name},
         {"path_within_build", v.path_within_build},
         {"cmake_build_type", v.cmake_build_type},
         {"override_settings", v.override_settings},
@@ -648,22 +577,9 @@ inline void to_json(json& j, const ProfileEntry& v) {
 }
 
 inline void from_json(const json& j, ProfileEntry& v) {
-    j.at("name").get_to(v.name);
     j.at("path_within_build").get_to(v.path_within_build);
     j.at("cmake_build_type").get_to(v.cmake_build_type);
     j.at("override_settings").get_to(v.override_settings);
-}
-
-inline void to_json(json& j, const Profiles& v) {
-    j = json{
-        {"default_name", v.default_name},
-        {"known", v.known},
-    };
-}
-
-inline void from_json(const json& j, Profiles& v) {
-    j.at("default_name").get_to(v.default_name);
-    j.at("known").get_to(v.known);
 }
 
 inline void to_json(json& j, const Config& v) {

@@ -149,11 +149,11 @@ public:
             return *(flags.profile);
         }
 
-        return config.profiles.default_name;
+        return config.settings.default_profile;
     }
 
     const std::unordered_map<std::string, config::ProfileEntry> &profiles() {
-        return config.profiles.known;
+        return config.profiles;
     }
 
     const config::ProfileEntry &profile(std::optional<std::string> maybe_profile_name = std::nullopt) {
@@ -176,6 +176,10 @@ public:
         return build_systems().at(*build_system_name);
     }
 
+    const std::string build_system_name() {
+        return config.settings.build_system;
+    }
+
     const std::unordered_map<std::string, config::Toolchain> &toolchains() {
         return config.toolchains;
     }
@@ -188,28 +192,40 @@ public:
         return toolchains().at(*toolchain_name);
     }
 
+    const std::string toolchain_name() {
+        return config.settings.toolchain;
+    }
+
     const std::unordered_map<std::string, config::FormatProgram> &format_programs() {
-        return config.format.known;
+        return config.format;
     }
 
     const config::FormatProgram &format_program(std::optional<std::string> format_program_name = std::nullopt) {
         if(!format_program_name) {
-            format_program_name = config.format.selected;
+            format_program_name = config.settings.formatter;
         }
 
         return format_programs().at(*format_program_name);
     }
 
+    const std::string format_program_name() {
+        return config.settings.formatter;
+    }
+
     const std::unordered_map<std::string, config::LintProgram> &lint_programs() {
-        return config.lint.known;
+        return config.lint;
     }
 
     const config::LintProgram &lint_program(std::optional<std::string> lint_program_name = std::nullopt) {
         if(!lint_program_name) {
-            lint_program_name = config.lint.selected;
+            lint_program_name = config.settings.linter;
         }
 
         return lint_programs().at(*lint_program_name);
+    }
+
+    const std::string lint_program_name() {
+        return config.settings.linter;
     }
 
     const std::unordered_map<std::string, config::Command> &commands() {

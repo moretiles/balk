@@ -1,0 +1,165 @@
+{
+  "version": "0.0.1",
+  "unchangable_settings": {
+    "project": "balk",
+    "language": "C++",
+    "meta_build_system": "cmake"
+  },
+  "settings": {
+    "binary": "executable",
+    "build_system": "ninja",
+    "toolchain": "clang",
+
+    "cmake": {
+      "path": "cmake",
+      "configure_arguments": [],
+      "build_arguments": []
+    }
+  },
+  "directories": {
+    "balk_path": "balk",
+    "build_path": "build",
+    "cmake_path": "cmake",
+    "examples_path": "examples",
+    "export_path": "export",
+    "headers_path": "headers",
+    "source_path": "source",
+    "tests_path": "tests",
+    "benchmarks_path": "benchmarks"
+  },
+  "format": {
+    "selected": "",
+    "known": {
+       "clang-fmt": {
+         "binary": "clang-format",
+         "preappended_arguments": [],
+         "appended_arguments": []
+       },
+       "astyle": {
+         "binary": "astyle",
+         "preappended_arguments": [],
+         "appended_arguments": []
+       }
+    }
+  },
+  "lint": {
+    "selected": "",
+    "known": {
+       "clang-check": {
+         "binary": "clang-check",
+         "preappended_arguments": [],
+         "appended_arguments": []
+       }
+    }
+  },
+  "build_systems": {
+    "make": {
+      "name": "make",
+      "build_type": "Unix Makefile",
+      "path": "make"
+    },
+    "ninja": {
+      "name": "ninja",
+      "build_type": "Ninja",
+      "path": "ninja"
+    }
+  },
+  "toolchains": {
+    "gcc": {
+      "name": "gcc",
+      "c_compiler": "gcc",
+      "cpp_compiler": "g++",
+      "linker": "ld",
+      "assembler": "as"
+    },
+    "clang": {
+      "name": "clang",
+      "c_compiler": "clang",
+      "cpp_compiler": "clang++",
+      "linker": "ld",
+      "assembler": "clang"
+    },
+    "msvc": {
+      "name": "msvc",
+      "c_compiler": "cl",
+      "cpp_compiler": "cl",
+      "linker": "link",
+      "assembler": "ml"
+    }
+  },
+  "commands": {
+    "fetch": {
+      "name": "fetch",
+      "binary": "balk",
+      "preappended_arguments": [
+        "internal",
+        "fetch"
+      ],
+      "appended_arguments": []
+    },
+    "valgrind": {
+      "name": "valgrind",
+      "binary": "valgrind",
+      "preappended_arguments": [
+        "build/debug/myexample.exe"
+      ],
+      "appended_arguments": []
+    }
+  },
+  "profiles": {
+    "default_name": "debug",
+    "known": {
+      "debug": {
+        "name": "debug",
+        "path_within_build": "debug",
+        "cmake_build_type": "Debug",
+        "override_settings": {
+          "build-system": "makefile"
+        }
+      },
+      "release": {
+        "name": "release",
+        "path_within_build": "release",
+        "cmake_build_type": "Release",
+        "override_settings": {
+          "toolchain": "gcc"
+        }
+      }
+    }
+  }
+}
+
+[
+    "// The ideal",
+    "$ balk build-system set --profile windows_release tyler",
+    "Attempting to use custom build-system...",
+    "build-system: tyler",
+    "",
+    "What build-system should be set for CMake (CMAKE_BUILD_TYPE)?",
+    "Valid build-system for CMake are described on: https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html",
+    "> Ninja",
+    "What path should be used to invoke the build-system?",
+    "> /usr/local/bin/tyler-ninja/tyler-ninja",
+    "",
+    "Using custom build-system tyler for profile: windows_release",
+    "$ balk build-system set --profile windows_debug tyler",
+    "Using build-system tyler for profile: windows_debug"
+]
+
+[
+    "cmake \",
+    "    -DBALK_PROJECT=balk \",
+    "    -B build/debug -DBALK_PROFILE=debug -DCMAKE_BUILD_TYPE=Debug \",
+    "    -DBALK_BINARY=executable \",
+    "    -G Ninja -DCMAKE_MAKE_PROGRAM=ninja \",
+    "    -DBALK_TOOLCHAIN=clang -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \",
+    "    -DBALK_ENABLE_MODULES=ON \",
+    "    -DBALK_DIRECTORY_BALK=balk \",
+    "    -DBALK_DIRECTORY_BUILD=build \",
+    "    -DBALK_DIRECTORY_CMAKE=cmake \",
+    "    -DBALK_DIRECTORY_EXAMPLES=examples \",
+    "    -DBALK_DIRECTORY_EXPORT=export \",
+    "    -DBALK_DIRECTORY_HEADERS=headers \",
+    "    -DBALK_DIRECTORY_SOURCE=source \",
+    "    -DBALK_DIRECTORY_TESTS=tests"
+]

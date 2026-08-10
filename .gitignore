@@ -1,0 +1,15 @@
+# Balk
+balk/
+build/
+export/
+fetch/
+
+# Editor
+*~
+[._]*.swp
+[._]swp
+Session.vim
+Sessionx.vim
+.netrwhist
+tags
+[._]*.un~

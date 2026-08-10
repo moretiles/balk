@@ -1,0 +1,116 @@
+{
+  "version": "0.0.1",
+  "unchangable_settings": {
+    "project": "balk",
+    "language": "C++",
+    "meta_build_system": "cmake"
+  },
+  "settings": {
+    "binary": "executable",
+    "build_system": "ninja",
+    "toolchain": "clang",
+    "formatter": "",
+    "linter": "",
+
+    "default_profile": "debug",
+
+    "cmake": {
+      "path": "cmake",
+      "configure_arguments": [],
+      "build_arguments": []
+    }
+  },
+  "directories": {
+    "balk_path": "balk",
+    "build_path": "build",
+    "cmake_path": "cmake",
+    "examples_path": "examples",
+    "export_path": "export",
+    "headers_path": "headers",
+    "source_path": "source",
+    "tests_path": "tests",
+    "benchmarks_path": "benchmarks"
+  },
+  "format": {
+    "clang-fmt": {
+      "binary": "clang-fmt",
+      "preappended_arguments": [],
+      "appended_arguments": []
+    },
+    "astyle": {
+      "binary": "astyle",
+      "preappended_arguments": [],
+      "appended_arguments": []
+    }
+  },
+  "lint": {
+    "clang-check": {
+      "binary": "clang-check",
+      "preappended_arguments": [],
+      "appended_arguments": []
+    }
+  },
+  "build_systems": {
+    "make": {
+      "build_type": "Unix Makefile",
+      "path": "make"
+    },
+    "ninja": {
+      "build_type": "Ninja",
+      "path": "ninja"
+    }
+  },
+  "toolchains": {
+    "gcc": {
+      "c_compiler": "gcc",
+      "cpp_compiler": "g++",
+      "linker": "ld",
+      "assembler": "as"
+    },
+    "clang": {
+      "c_compiler": "clang",
+      "cpp_compiler": "clang++",
+      "linker": "ld",
+      "assembler": "clang"
+    },
+    "msvc": {
+      "c_compiler": "cl",
+      "cpp_compiler": "cl",
+      "linker": "link",
+      "assembler": "ml"
+    }
+  },
+  "commands": {
+    "fetch": {
+      "binary": "balk",
+      "preappended_arguments": [
+        "internal",
+        "fetch"
+      ],
+      "appended_arguments": []
+    },
+    "valgrind": {
+      "binary": "valgrind",
+      "preappended_arguments": [
+        "build/debug/myexample.exe"
+      ],
+      "appended_arguments": []
+    }
+  },
+  "profiles": {
+    "debug": {
+      "path_within_build": "debug",
+      "cmake_build_type": "Debug",
+      "override_settings": {
+        "build-system": "makefile"
+      }
+    },
+    "release": {
+      "path_within_build": "release",
+      "cmake_build_type": "Release",
+      "override_settings": {
+        "toolchain": "gcc"
+      }
+    }
+  }
+}

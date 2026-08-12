@@ -23,6 +23,9 @@
   "directories": {
     "balk_path": "balk",
     "build_path": "build",
+    "build_examples_path": "examples",
+    "build_tests_path": "tests",
+    "build_benchmarks_path": "benchmarks",
     "cmake_path": "cmake",
     "examples_path": "examples",
     "export_path": "export",

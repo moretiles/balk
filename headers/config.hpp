@@ -48,6 +48,9 @@ struct OverrideSettings {
 struct Directories {
     std::string balk_path = "";
     std::string build_path = "";
+    std::string build_benchmarks_path = "";
+    std::string build_examples_path = "";
+    std::string build_tests_path = "";
     std::string cmake_path = "";
     std::string examples_path = "";
     std::string export_path = "";
@@ -255,6 +258,9 @@ const constexpr std::string_view config_schema = R"json(
       "required": [
         "balk_path",
         "build_path",
+        "build_benchmarks_path",
+        "build_examples_path",
+        "build_tests_path",
         "cmake_path",
         "examples_path",
         "export_path",
@@ -266,6 +272,9 @@ const constexpr std::string_view config_schema = R"json(
       "properties": {
         "balk_path": {"$ref": "#/definitions/string"},
         "build_path": {"$ref": "#/definitions/string"},
+        "build_benchmarks_path": {"$ref": "#/definitions/string"},
+        "build_examples_path": {"$ref": "#/definitions/string"},
+        "build_tests_path": {"$ref": "#/definitions/string"},
         "cmake_path": {"$ref": "#/definitions/string"},
         "examples_path": {"$ref": "#/definitions/string"},
         "export_path": {"$ref": "#/definitions/string"},
@@ -476,6 +485,9 @@ inline void to_json(json& j, const Directories& v) {
     j = json{
         {"balk_path", v.balk_path},
         {"build_path", v.build_path},
+        {"build_benchmarks_path", v.build_benchmarks_path},
+        {"build_examples_path", v.build_examples_path},
+        {"build_tests_path", v.build_tests_path},
         {"cmake_path", v.cmake_path},
         {"examples_path", v.examples_path},
         {"export_path", v.export_path},
@@ -489,6 +501,9 @@ inline void to_json(json& j, const Directories& v) {
 inline void from_json(const json& j, Directories& v) {
     j.at("balk_path").get_to(v.balk_path);
     j.at("build_path").get_to(v.build_path);
+    j.at("build_benchmarks_path").get_to(v.build_benchmarks_path);
+    j.at("build_examples_path").get_to(v.build_examples_path);
+    j.at("build_tests_path").get_to(v.build_tests_path);
     j.at("cmake_path").get_to(v.cmake_path);
     j.at("examples_path").get_to(v.examples_path);
     j.at("export_path").get_to(v.export_path);

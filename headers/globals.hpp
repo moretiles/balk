@@ -252,10 +252,28 @@ public:
         return path;
     }
 
-    const std::string build_path(const std::string &profile_name) {
+    const std::string build_path(std::string profile_name) {
         std::filesystem::path path = root_path();
         path /= config.directories.build_path;
         path /= profile_name;
+        return path;
+    }
+
+    const std::string benchmarks_build_path() {
+        std::filesystem::path path = build_path(profile_name());
+        path /= config.directories.build_benchmarks_path;
+        return path;
+    }
+
+    const std::string examples_build_path() {
+        std::filesystem::path path = build_path(profile_name());
+        path /= config.directories.build_examples_path;
+        return path;
+    }
+
+    const std::string tests_build_path() {
+        std::filesystem::path path = build_path(profile_name());
+        path /= config.directories.build_tests_path;
         return path;
     }
 

@@ -1,12 +1,10 @@
-if(EXISTS "${BALK_DIRECTORY_TESTS}")
-    set(BALK_DIRECTORY_TEST_BINARIES "${CMAKE_CURRENT_BINARY_DIR}/tests")
-
+if(EXISTS "${BALK_DIRECTORIES_TESTS}")
     file(
         GLOB_RECURSE
         balk_test_files
         CONFIGURE_DEPENDS
-        "${BALK_DIRECTORY_TESTS}/*.cpp"
-        "${BALK_DIRECTORY_TESTS}/*.cc"
+        "${BALK_DIRECTORIES_TESTS}/*.cpp"
+        "${BALK_DIRECTORIES_TESTS}/*.cc"
     )
 
     add_custom_target(tests)
@@ -15,7 +13,7 @@ if(EXISTS "${BALK_DIRECTORY_TESTS}")
         # Get the path relative to the tests source directory
         cmake_path(
             RELATIVE_PATH source_file
-            BASE_DIRECTORY "${BALK_DIRECTORY_TESTS}"
+            BASE_DIRECTORY "${BALK_DIRECTORIES_TESTS}"
             OUTPUT_VARIABLE rel_path
         )
     
@@ -29,8 +27,8 @@ if(EXISTS "${BALK_DIRECTORY_TESTS}")
         add_executable(${target_name} EXCLUDE_FROM_ALL "${source_file}")
 
         # Preserve the directory structure in the binary output directory
-        # e.g., ${BALK_DIRECTORY_TEST_BINARIES}/a/b/c/d.exe (or without .exe extension on Linux/Mac)
-        get_filename_component(target_output_dir "${BALK_DIRECTORY_TEST_BINARIES}/${rel_path}" DIRECTORY)
+        # e.g., ${BALK_DIRECTORIES_BUILD_TESTS}/a/b/c/d.exe (or without .exe extension on Linux/Mac)
+        get_filename_component(target_output_dir "${BALK_DIRECTORIES_BUILD_TESTS}/${rel_path}" DIRECTORY)
         get_filename_component(target_output_name "${rel_path}" NAME_WE)
     
         set_target_properties(

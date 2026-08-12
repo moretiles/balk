@@ -1,12 +1,10 @@
-if(EXISTS "${BALK_DIRECTORY_BENCHMARKS}")
-    set(BALK_DIRECTORY_BENCHMARK_BINARIES "${CMAKE_CURRENT_BINARY_DIR}/benchmarks")
-
+if(EXISTS "${BALK_DIRECTORIES_BENCHMARKS}")
     file(
         GLOB_RECURSE
         balk_benchmark_files
         CONFIGURE_DEPENDS
-        "${BALK_DIRECTORY_BENCHMARKS}/*.cpp"
-        "${BALK_DIRECTORY_BENCHMARKS}/*.cc"
+        "${BALK_DIRECTORIES_BENCHMARKS}/*.cpp"
+        "${BALK_DIRECTORIES_BENCHMARKS}/*.cc"
     )
 
     add_custom_target(benchmarks)
@@ -15,7 +13,7 @@ if(EXISTS "${BALK_DIRECTORY_BENCHMARKS}")
         # Get the path relative to the benchmarks source directory
         cmake_path(
             RELATIVE_PATH source_file
-            BASE_DIRECTORY "${BALK_DIRECTORY_BENCHMARKS}"
+            BASE_DIRECTORY "${BALK_DIRECTORIES_BENCHMARKS}"
             OUTPUT_VARIABLE rel_path
         )
     
@@ -29,8 +27,8 @@ if(EXISTS "${BALK_DIRECTORY_BENCHMARKS}")
         add_executable(${target_name} EXCLUDE_FROM_ALL "${source_file}")
 
         # Preserve the directory structure in the binary output directory
-        # e.g., ${BALK_DIRECTORY_BENCHMARK_BINARIES}/a/b/c/d.exe (or without .exe extension on Linux/Mac)
-        get_filename_component(target_output_dir "${BALK_DIRECTORY_BENCHMARK_BINARIES}/${rel_path}" DIRECTORY)
+        # e.g., ${BALK_DIRECTORIES_BUILD_BENCHMARKS}/a/b/c/d.exe (or without .exe extension on Linux/Mac)
+        get_filename_component(target_output_dir "${BALK_DIRECTORIES_BUILD_BENCHMARKS}/${rel_path}" DIRECTORY)
         get_filename_component(target_output_name "${rel_path}" NAME_WE)
     
         set_target_properties(

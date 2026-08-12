@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project("${BALK_PROJECT}")
+project("${BALK_UNCHANGABLE_SETTINGS_PROJECT}")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
@@ -19,8 +19,8 @@ set(CMAKE_CXX_EXTENSIONS ON)
 # Pass the --verbose flag (when using build) to see the CMake invocation.
 # alsoe, see the (mostly complete) list of variables at https://....
 # Some of the most important are:
-#   BALK_PROJECT              Project name
-#   BALK_BINARY               Built binary (executable, archive, shared)
+#   BALK_UNCHANGABLE_SETTINGS_PROJECT              Project name
+#   BALK_SETTINGS_BINARY               Built binary (executable, archive, shared)
 #   BALK_PROFILE              Selected profile (debug, release, or something else)
 #   CMAKE_SYSTEM_NAME          Target operating system to compile for
 #   CMAKE_SYSTEM_PROCESSOR     Target processor (architecture) to compile for
@@ -28,32 +28,32 @@ set(CMAKE_CXX_EXTENSIONS ON)
 
 
 # set compilation options based on profile, generator, toolchain, etc...
-include("${BALK_DIRECTORY_CMAKE}/compilation.cmake")
+include("${BALK_DIRECTORIES_CMAKE}/compilation.cmake")
 
 # path to header/ directory exposed through the variable ${balk_header_files}
-include("${BALK_DIRECTORY_CMAKE}/headers.cmake")
+include("${BALK_DIRECTORIES_CMAKE}/headers.cmake")
 
 # list of module files under source/ exposed as a library through the variable ${balk_modules}
-include("${BALK_DIRECTORY_CMAKE}/modules.cmake")
+include("${BALK_DIRECTORIES_CMAKE}/modules.cmake")
 
 # fetch source code with git using the custom command: `balk command fetch`
 # fetched libraries exposed through the variable ${balk_FetchContent}
-include("${BALK_DIRECTORY_CMAKE}/fetch.cmake")
+include("${BALK_DIRECTORIES_CMAKE}/fetch.cmake")
 
 
 
 # build binary
-include("${BALK_DIRECTORY_CMAKE}/build_binary.cmake")
+include("${BALK_DIRECTORIES_CMAKE}/build_binary.cmake")
 
 # build tests if enabled
-include("${BALK_DIRECTORY_CMAKE}/build_tests.cmake")
+include("${BALK_DIRECTORIES_CMAKE}/build_tests.cmake")
 
 # build examples if enabled
-include("${BALK_DIRECTORY_CMAKE}/build_examples.cmake")
+include("${BALK_DIRECTORIES_CMAKE}/build_examples.cmake")
 
 # build benchmarks if enabled
-include("${BALK_DIRECTORY_CMAKE}/build_benchmarks.cmake")
+include("${BALK_DIRECTORIES_CMAKE}/build_benchmarks.cmake")
 
 # custom targets built before commands are run
 # targets: build run test example export clean format lint
-include("${BALK_DIRECTORY_CMAKE}/command_targets.cmake")
+include("${BALK_DIRECTORIES_CMAKE}/command_targets.cmake")

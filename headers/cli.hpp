@@ -16,8 +16,10 @@
 #include <flaf.hpp>
 
 #include <process.hpp>
+#include <config.hpp>
 #include <globals.hpp>
 #include <ui.hpp>
+#include <embed.hpp>
 
 namespace cli {
 int profile() {
@@ -30,26 +32,29 @@ namespace build {
 std::vector<std::string> reconfigure_command_line() {
     return {
         g->cmake().path,
-        std::format("-DBALK_PROJECT={}", g->project()),
+        std::format("-DBALK_UNCHANGABLE_SETTINGS_PROJECT={}", g->project()),
         "-S", g->root_path(),
         "-B", g->build_path(g->profile_name()),
         std::format("-DBALK_PROFILE={}", g->profile_name()),
         std::format("-DCMAKE_BUILD_TYPE={}", g->profile().cmake_build_type),
-        std::format("-DBALK_BINARY={}", g->binary()),
+        std::format("-DBALK_SETTINGS_BINARY={}", g->binary()),
         "-G", g->build_system().build_type,
         std::format("-DCMAKE_MAKE_PROGRAM={}", g->build_system_name()),
         std::format("-DBALK_TOOLCHAIN={}", g->toolchain_name()),
         std::format("-DCMAKE_C_COMPILER={}", g->toolchain().c_compiler),
         std::format("-DCMAKE_CXX_COMPILER={}", g->toolchain().cpp_compiler),
-        std::format("-DBALK_DIRECTORY_BALK={}", g->balk_path()),
-        std::format("-DBALK_DIRECTORY_BUILD={}", g->build_path()),
-        std::format("-DBALK_DIRECTORY_CMAKE={}", g->cmake_path()),
-        std::format("-DBALK_DIRECTORY_EXAMPLES={}", g->examples_path()),
-        std::format("-DBALK_DIRECTORY_EXPORT={}", g->export_path()),
-        std::format("-DBALK_DIRECTORY_HEADERS={}", g->headers_path()),
-        std::format("-DBALK_DIRECTORY_SOURCE={}", g->source_path()),
-        std::format("-DBALK_DIRECTORY_TESTS={}", g->tests_path()),
-        std::format("-DBALK_DIRECTORY_BENCHMARKS={}", g->benchmarks_path())
+        std::format("-DBALK_DIRECTORIES_BALK={}", g->balk_path()),
+        std::format("-DBALK_DIRECTORIES_BUILD={}", g->build_path()),
+        std::format("-DBALK_DIRECTORIES_BUILD_BENCHMARKS={}", g->benchmarks_build_path()),
+        std::format("-DBALK_DIRECTORIES_BUILD_EXAMPLES={}", g->examples_build_path()),
+        std::format("-DBALK_DIRECTORIES_BUILD_TESTS={}", g->tests_build_path()),
+        std::format("-DBALK_DIRECTORIES_CMAKE={}", g->cmake_path()),
+        std::format("-DBALK_DIRECTORIES_EXAMPLES={}", g->examples_path()),
+        std::format("-DBALK_DIRECTORIES_EXPORT={}", g->export_path()),
+        std::format("-DBALK_DIRECTORIES_HEADERS={}", g->headers_path()),
+        std::format("-DBALK_DIRECTORIES_SOURCE={}", g->source_path()),
+        std::format("-DBALK_DIRECTORIES_TESTS={}", g->tests_path()),
+        std::format("-DBALK_DIRECTORIES_BENCHMARKS={}", g->benchmarks_path())
     };
 }
 
@@ -139,7 +144,7 @@ int main(std::vector<std::string> arguments) {
     process::run(command_line, true, true);
 
     std::filesystem::path root_path = g->build_path(g->profile_name());
-    root_path /= "benchmarks";
+    root_path /= g->benchmarks_build_path();
 
     std::vector<std::string> executables = {};
     std::error_code ec{};
@@ -200,7 +205,7 @@ int main(std::vector<std::string> arguments) {
     process::run(command_line, true, true);
 
     std::filesystem::path root_path = g->build_path(g->profile_name());
-    root_path /= "benchmarks";
+    root_path /= g->benchmarks_build_path();
 
     bool can_run = false;
     command_line = std::move(arguments);
@@ -260,7 +265,7 @@ int main(std::vector<std::string> arguments) {
     process::run(command_line, true, true);
 
     std::filesystem::path root_path = g->build_path(g->profile_name());
-    root_path /= "examples";
+    root_path /= g->examples_build_path();
 
     std::vector<std::string> executables = {};
     std::error_code ec{};
@@ -321,7 +326,7 @@ int main(std::vector<std::string> arguments) {
     process::run(command_line, true, true);
 
     std::filesystem::path root_path = g->build_path(g->profile_name());
-    root_path /= "examples";
+    root_path /= g->examples_build_path();
 
     bool can_run = false;
     command_line = std::move(arguments);
@@ -381,7 +386,7 @@ int main(std::vector<std::string> arguments) {
     process::run(command_line, true, true);
 
     std::filesystem::path root_path = g->build_path(g->profile_name());
-    root_path /= "tests";
+    root_path /= g->tests_build_path();
 
     std::vector<std::string> executables = {};
     std::error_code ec{};
@@ -442,7 +447,7 @@ int main(std::vector<std::string> arguments) {
     process::run(command_line, true, true);
 
     std::filesystem::path root_path = g->build_path(g->profile_name());
-    root_path /= "tests";
+    root_path /= g->tests_build_path();
 
     bool can_run = false;
     command_line = std::move(arguments);
@@ -531,10 +536,12 @@ const std::string footer_help("Create a project");
 
 int main(std::vector<std::string> arguments) {
     const std::string project_name = arguments[0];
-    const std::filesystem::path project_name_path = project_name;
+    const std::filesystem::path project_name_path = arguments[0];
     const std::filesystem::path balk_path(project_name_path / "balk");
+    const std::filesystem::path benchmarks_path(project_name_path / "benchmarks");
     const std::filesystem::path build_path(project_name_path / "build");
     const std::filesystem::path cmake_path(project_name_path / "cmake");
+    const std::filesystem::path cmake_fetch_path(cmake_path / "fetch");
     const std::filesystem::path examples_path(project_name_path / "examples");
     const std::filesystem::path export_path(project_name_path / "export");
     const std::filesystem::path headers_path(project_name_path / "headers");
@@ -542,95 +549,11 @@ int main(std::vector<std::string> arguments) {
     const std::filesystem::path tests_path(project_name_path / "tests");
 
     std::filesystem::create_directories(project_name_path);
-
-    {
-        const std::filesystem::path file_path(project_name_path / "balk.json");
-        std::ofstream file(file_path);
-        if (!file) {
-            const std::string failure_message = std::string("Can't create file at: ") + std::string(file_path);
-            flaf::failure(failure_message);
-        }
-
-        file << "{" << "\n";
-        file << "}" << "\n";
-    }
-
-    {
-        const std::filesystem::path file_path(project_name_path / "CMakeLists.txt");
-        std::ofstream file(file_path);
-        if (!file) {
-            const std::string failure_message = std::string("Can't create file at: ") + std::string(file_path);
-            flaf::failure(failure_message);
-        }
-
-        file << "cmake_minimum_required(VERSION 3.28)" << "\n";
-        file << "project(\"${BALK_PROJECT}\")" << "\n";
-        file << "" << "\n";
-        file << "" << "\n";
-        file << "# This is your CMakeLists.txt file. It defines how to build your project." << "\n";
-        file << "# Balk will not modify this file at any point." << "\n";
-        file << "# Other files you write describing the build should be placed in cmake/." << "\n";
-        file << "# Files generated by Balk are placed in balk/ and should not be edited by hand because they may change at any time." << "\n";
-        file << "# Building anything regenerates your cmake build whenever CMakeLists.txt, any file under cmake/, or any file under balk changes." << "\n";
-        file << "" << "\n";
-        file << "" << "\n";
-        file << "# A number of variables describing the current build are set when CMake is ran." << "\n";
-        file << "# Every project starts with the same CMake files so these variables control what is built." << "\n";
-        file << "# Any variable in CMake beginning with CMAKE_ is set by CMake itself." << "\n";
-        file << "# Any variable in CMake beginning with BALK_ is a configuration option you can control." << "\n";
-        file << "# Pass the --verbose flag (when using build) to see the CMake invocation." << "\n";
-        file << "# also, see the (mostly complete) list of variables at https://...." << "\n";
-        file << "# Some of the most important are:" << "\n";
-        file << "#   BALK_PROJECT              Project name" << "\n";
-        file << "#   BALK_BINARY               Built binary (executable, archive, shared)" << "\n";
-        file << "#   BALK_PROFILE              Selected profile (debug, release, or something else)" << "\n";
-        file << "#   CMAKE_SYSTEM_NAME          Target operating system to compile for" << "\n";
-        file << "#   CMAKE_SYSTEM_PROCESSOR     Target processor (architecture) to compile for" << "\n";
-        file << "" << "\n";
-        file << "" << "\n";
-        file << "# fetched libraries are exported as ${balk_FetchContent}" << "\n";
-        file << "include(\"${CMAKE_SOURCE_DIR}/balk/fetch.cmake\")" << "\n";
-        file << "" << "\n";
-        file << "# C++ language options" << "\n";
-        file << "set(CMAKE_CXX_STANDARD \"${BALK_CXX_STANDARD}\")" << "\n";
-        file << "set(CMAKE_CXX_STANDARD_REQUIRED ON)" << "\n";
-        file << "" << "\n";
-        file << "# set compilation options based on profile, generator, toolchain, etc..." << "\n";
-        file << "include(\"${CMAKE_SOURCE_DIR}/cmake/compilation.cmake\")" << "\n";
-        file << "" << "\n";
-        file << "# use headers below headers/" << "\n";
-        file << "cmake_path(APPEND balk_header_files \"${CMAKE_SOURCE_DIR}\" \"headers\")" << "\n";
-        file << "" << "\n";
-        file << "# use modules below modules/" << "\n";
-        file << "if(BALK_ENABLE_MODULES)" << "\n";
-        file << "    # make sure modules are enabled" << "\n";
-        file << "    include(\"${CMAKE_SOURCE_DIR}/cmake/test_module_capability.cmake\")" << "\n";
-        file << "" << "\n";
-        file << "    file(" << "\n";
-        file << "        GLOB_RECURSE" << "\n";
-        file << "        balk_module_files" << "\n";
-        file << "        CONFIGURE_DEPENDS" << "\n";
-        file << "        \"${CMAKE_SOURCE_DIR}/modules/*.cppm\"" << "\n";
-        file << "    )" << "\n";
-        file << "endif()" << "\n";
-        file << "" << "\n";
-        file << "# build binary" << "\n";
-        file << "include(\"${CMAKE_SOURCE_DIR}/cmake/build_binary.cmake\")" << "\n";
-        file << "" << "\n";
-        file << "# build tests if enabled" << "\n";
-        file << "include(\"${CMAKE_SOURCE_DIR}/cmake/build_tests.cmake\")" << "\n";
-        file << "" << "\n";
-        file << "# build examples if enabled" << "\n";
-        file << "include(\"${CMAKE_SOURCE_DIR}/cmake/build_examples.cmake\")" << "\n";
-        file << "" << "\n";
-        file << "# custom targets built before commands are run" << "\n";
-        file << "# targets: build run test example export clean format lint" << "\n";
-        file << "include(\"${CMAKE_SOURCE_DIR}/cmake/command_targets.cmake\")" << "\n";
-    }
-
     std::filesystem::create_directories(balk_path);
+    std::filesystem::create_directories(benchmarks_path);
     std::filesystem::create_directories(build_path);
     std::filesystem::create_directories(cmake_path);
+    std::filesystem::create_directories(cmake_fetch_path);
     std::filesystem::create_directories(examples_path);
     std::filesystem::create_directories(export_path);
     std::filesystem::create_directories(headers_path);
@@ -638,308 +561,33 @@ int main(std::vector<std::string> arguments) {
     std::filesystem::create_directories(tests_path);
 
     {
-        const std::filesystem::path file_path(source_path / "main.cpp");
-        std::ofstream file(file_path);
-        if (!file) {
-            const std::string failure_message = std::string("Can't create file at: ") + std::string(file_path);
-            flaf::failure(failure_message);
-        }
+        const std::filesystem::path file_path(project_name_path / "balk.json");
 
-        file << "#include <cstdlib>" << "\n";
-        file << "" << "\n";
-        file << "// This is your main program" << "\n";
-        file << "int main() {" << "\n";
-        file << "    return EXIT_SUCCESS;" << "\n";
-        file << "}" << "\n";
+        json created_config_json = json::parse(embed::balk_json);
+        config::Config created_config = created_config_json;
+        created_config.unchangable_settings.project = project_name;
+        created_config_json = created_config;
+        const std::string created_config_json_string = created_config_json.dump(4);
+
+        helper::dump_all(file_path, created_config_json_string);
     }
 
-    {
-        const std::filesystem::path file_path(tests_path / "main.cpp");
-        std::ofstream file(file_path);
-        if (!file) {
-            const std::string failure_message = std::string("Can't create file at: ") + std::string(file_path);
-            flaf::failure(failure_message);
-        }
+    helper::dump_all(project_name_path / "CMakeLists.txt", embed::cmakelists_txt);
+    helper::dump_all(source_path / "main.cpp", embed::sources::main_cpp);
+    helper::dump_all(benchmarks_path / "benchmark.cpp", embed::benchmarks::benchmark_cpp);
+    helper::dump_all(examples_path / "example.cpp", embed::examples::example_cpp);
+    helper::dump_all(tests_path / "test.cpp", embed::tests::test_cpp);
 
-        file << "#include <cstdlib>" << "\n";
-        file << "" << "\n";
-        file << "// This is your tests program" << "\n";
-        file << "int main() {" << "\n";
-        file << "    return EXIT_SUCCESS;" << "\n";
-        file << "}" << "\n";
-    }
-
-    {
-        const std::filesystem::path file_path(examples_path / "main.cpp");
-        std::ofstream file(file_path);
-        if (!file) {
-            const std::string failure_message = std::string("Can't create file at: ") + std::string(file_path);
-            flaf::failure(failure_message);
-        }
-
-        file << "#include <cstdlib>" << "\n";
-        file << "" << "\n";
-        file << "// This is your examples program" << "\n";
-        file << "int main() {" << "\n";
-        file << "    return EXIT_SUCCESS;" << "\n";
-        file << "}" << "\n";
-    }
-
-    {
-        const std::filesystem::path file_path(balk_path / "fetch.cmake");
-        std::ofstream file(file_path);
-        if (!file) {
-            const std::string failure_message = std::string("Can't create file at: ") + std::string(file_path);
-            flaf::failure(failure_message);
-        }
-
-        file << "cmake_path(APPEND FETCHCONTENT_BASE_DIR \"${CMAKE_SOURCE_DIR}\" \"FetchContent\")" << "\n";
-        file << "include(FetchContent)" << "\n";
-        file << "" << "\n";
-        file << "" << "\n";
-        file << "#Fetched content" << "\n";
-        file << "" << "\n";
-        file << "" << "\n";
-        file << "add_library(balk_FetchContent INTERFACE)" << "\n";
-        file << "target_link_libraries(" << "\n";
-        file << "    balk_FetchContent INTERFACE" << "\n";
-        file << ")" << "\n";
-    }
-
-    {
-        const std::filesystem::path file_path(cmake_path / "build_binary.cmake");
-        std::ofstream file(file_path);
-        if (!file) {
-            const std::string failure_message = std::string("Can't create file at: ") + std::string(file_path);
-            flaf::failure(failure_message);
-        }
-
-        file << "if(\"${BALK_BINARY}\" STREQUAL \"executable\")" << "\n";
-        file << "    add_executable(${PROJECT_NAME})" << "\n";
-        file << "elseif(\"${BALK_BINARY}\" STREQUAL \"archive\")" << "\n";
-        file << "    add_library(${PROJECT_NAME} STATIC)" << "\n";
-        file << "elseif(\"${BALK_BINARY}\" STREQUAL \"shared\")" << "\n";
-        file << "    add_library(${PROJECT_NAME} SHARED)" << "\n";
-        file << "else()" << "\n";
-        file << "    message(WARNING \"Not building an executable, archive, or shared binary! Maybe an issue!\")" << "\n";
-        file << "endif()" << "\n";
-        file << "" << "\n";
-        file << "target_include_directories(${PROJECT_NAME} PRIVATE \"${balk_header_files}\")" << "\n";
-        file << "" << "\n";
-        file << "file(" << "\n";
-        file << "    GLOB_RECURSE" << "\n";
-        file << "    balk_source_files" << "\n";
-        file << "    CONFIGURE_DEPENDS" << "\n";
-        file << "    \"${CMAKE_SOURCE_DIR}/source/*.cpp\"" << "\n";
-        file << ")" << "\n";
-        file << "target_sources(" << "\n";
-        file << "    ${PROJECT_NAME}" << "\n";
-        file << "    PRIVATE ${balk_source_files}" << "\n";
-        file << ")" << "\n";
-        file << "" << "\n";
-        file << "if(${BALK_ENABLE_MODULES})" << "\n";
-        file << "    target_sources(" << "\n";
-        file << "        ${PROJECT_NAME}" << "\n";
-        file << "        PRIVATE FILE_SET balk_module_files_set TYPE CXX_MODULES FILES ${balk_module_files}" << "\n";
-        file << "    )" << "\n";
-        file << "endif()" << "\n";
-        file << "" << "\n";
-        file << "target_link_libraries(${PROJECT_NAME} PRIVATE balk_FetchContent)" << "\n";
-    }
-
-    {
-        const std::filesystem::path file_path(cmake_path / "build_examples.cmake");
-        std::ofstream file(file_path);
-        if (!file) {
-            const std::string failure_message = std::string("Can't create file at: ") + std::string(file_path);
-            flaf::failure(failure_message);
-        }
-
-        file << "if(EXISTS \"${CMAKE_SOURCE_DIR}/examples\")" << "\n";
-        file << "    if(BALK_EXAMPLES_BUILD_BY_DEFAULT)" << "\n";
-        file << "        add_executable(examples)" << "\n";
-        file << "    else()" << "\n";
-        file << "        add_executable(examples EXCLUDE_FROM_ALL)" << "\n";
-        file << "    endif()" << "\n";
-        file << "" << "\n";
-        file << "    target_include_directories(examples PRIVATE \"${balk_header_files}\")" << "\n";
-        file << "" << "\n";
-        file << "    file(" << "\n";
-        file << "        GLOB_RECURSE" << "\n";
-        file << "        balk_example_files" << "\n";
-        file << "        CONFIGURE_DEPENDS" << "\n";
-        file << "        \"${CMAKE_SOURCE_DIR}/examples/*.cpp\"" << "\n";
-        file << "    )" << "\n";
-        file << "    target_sources(" << "\n";
-        file << "            examples" << "\n";
-        file << "            PRIVATE ${balk_example_files}" << "\n";
-        file << "    )" << "\n";
-        file << "" << "\n";
-        file << "    if(${BALK_ENABLE_MODULES})" << "\n";
-        file << "        target_sources(" << "\n";
-        file << "            examples" << "\n";
-        file << "            PRIVATE FILE_SET balk_module_files_set TYPE CXX_MODULES FILES ${balk_module_files}" << "\n";
-        file << "        )" << "\n";
-        file << "    endif()" << "\n";
-        file << "" << "\n";
-        file << "    target_link_libraries(examples PRIVATE balk_FetchContent)" << "\n";
-        file << "endif()" << "\n";
-    }
-
-    {
-        const std::filesystem::path file_path(cmake_path / "build_tests.cmake");
-        std::ofstream file(file_path);
-        if (!file) {
-            const std::string failure_message = std::string("Can't create file at: ") + std::string(file_path);
-            flaf::failure(failure_message);
-        }
-
-        file << "if(EXISTS \"${CMAKE_SOURCE_DIR}/tests\")" << "\n";
-        file << "    if(BALK_TESTS_BUILD_BY_DEFAULT)" << "\n";
-        file << "        add_executable(tests)" << "\n";
-        file << "    else()" << "\n";
-        file << "        add_executable(tests EXCLUDE_FROM_ALL)" << "\n";
-        file << "    endif()" << "\n";
-        file << "" << "\n";
-        file << "    target_include_directories(tests PRIVATE \"${balk_header_files}\")" << "\n";
-        file << "" << "\n";
-        file << "    file(" << "\n";
-        file << "        GLOB_RECURSE" << "\n";
-        file << "        balk_test_files" << "\n";
-        file << "        CONFIGURE_DEPENDS" << "\n";
-        file << "        \"${CMAKE_SOURCE_DIR}/tests/*.cpp\"" << "\n";
-        file << "    )" << "\n";
-        file << "    target_sources(" << "\n";
-        file << "        tests" << "\n";
-        file << "        PRIVATE ${balk_test_files}" << "\n";
-        file << "    )" << "\n";
-        file << "" << "\n";
-        file << "    if(${BALK_ENABLE_MODULES})" << "\n";
-        file << "        target_sources(" << "\n";
-        file << "            tests" << "\n";
-        file << "            PRIVATE FILE_SET balk_module_files_set TYPE CXX_MODULES FILES ${balk_module_files}" << "\n";
-        file << "        )" << "\n";
-        file << "    endif()" << "\n";
-        file << "" << "\n";
-        file << "    target_link_libraries(tests PRIVATE balk_FetchContent)" << "\n";
-        file << "endif()" << "\n";
-    }
-
-    {
-        const std::filesystem::path file_path(cmake_path / "command_targets.cmake");
-        std::ofstream file(file_path);
-        if (!file) {
-            const std::string failure_message = std::string("Can't create file at: ") + std::string(file_path);
-            flaf::failure(failure_message);
-        }
-
-        file << "add_custom_target(" << "\n";
-        file << "    build" << "\n";
-        file << "    DEPENDS ${PROJECT_NAME}" << "\n";
-        file << ")" << "\n";
-        file << "" << "\n";
-        file << "add_custom_target(" << "\n";
-        file << "    run" << "\n";
-        file << "    DEPENDS build" << "\n";
-        file << ")" << "\n";
-        file << "" << "\n";
-        file << "add_custom_target(" << "\n";
-        file << "    test" << "\n";
-        file << "    DEPENDS test" << "\n";
-        file << ")" << "\n";
-        file << "" << "\n";
-        file << "add_custom_target(" << "\n";
-        file << "    example" << "\n";
-        file << "    DEPENDS examples" << "\n";
-        file << ")" << "\n";
-        file << "" << "\n";
-        file << "add_custom_target(" << "\n";
-        file << "    export" << "\n";
-        file << "    COMMAND cmake -E copy \"${CMAKE_BINARY_DIR}/${PROJECT_NAME}\" \"${CMAKE_SOURCE_DIR}/export/${BALK_PROFILE}/${PROJECT_NAME}\"" << "\n";
-        file << "    DEPENDS ${PROJECT_NAME}" << "\n";
-        file << ")" << "\n";
-        file << "" << "\n";
-        file << "# CMake already defines a clean target" << "\n";
-        file << "#add_custom_target(" << "\n";
-        file << "    #clean" << "\n";
-        file << "#)" << "\n";
-        file << "" << "\n";
-        file << "add_custom_target(" << "\n";
-        file << "    format" << "\n";
-        file << ")" << "\n";
-        file << "" << "\n";
-        file << "add_custom_target(" << "\n";
-        file << "    lint" << "\n";
-        file << ")" << "\n";
-    }
-
-    {
-        const std::filesystem::path file_path(cmake_path / "compilation.cmake");
-        std::ofstream file(file_path);
-        if (!file) {
-            const std::string failure_message = std::string("Can't create file at: ") + std::string(file_path);
-            flaf::failure(failure_message);
-        }
-
-        file << "# control warning settings" << "\n";
-        file << "if(${BALK_TOOLCHAIN} STREQUAL \"msvc\")" << "\n";
-        file << "    add_compile_options(/W4)" << "\n";
-        file << "elseif(${BALK_TOOLCHAIN} STREQUAL \"gcc\")" << "\n";
-        file << "    add_compile_options(-Wall -Wextra)" << "\n";
-        file << "elseif(${BALK_TOOLCHAIN} STREQUAL \"clang\")" << "\n";
-        file << "    add_compile_options(-Wall -Wextra)" << "\n";
-        file << "else()" << "\n";
-        file << "endif()" << "\n";
-    }
-
-    {
-        const std::filesystem::path file_path(cmake_path / "test_module_capability.cmake");
-        std::ofstream file(file_path);
-        if (!file) {
-            const std::string failure_message = std::string("Can't create file at: ") + std::string(file_path);
-            flaf::failure(failure_message);
-        }
-
-        file << "set(CMAKE_CXX_SCAN_FOR_MODULES ON)" << "\n";
-        file << "" << "\n";
-        file << "include(CMakePushCheckState)" << "\n";
-        file << "" << "\n";
-        file << "set(CXX_MODULE_TEST_DIR \"${CMAKE_BINARY_DIR}/test_module_capability\")" << "\n";
-        file << "" << "\n";
-        file << "file(WRITE \"${CXX_MODULE_TEST_DIR}/CMakeLists.txt\" [=[" << "\n";
-        file << "cmake_minimum_required(VERSION 3.28)" << "\n";
-        file << "" << "\n";
-        file << "project(cxx_module_test LANGUAGES CXX)" << "\n";
-        file << "" << "\n";
-        file << "set(CMAKE_CXX_STANDARD 20)" << "\n";
-        file << "set(CMAKE_CXX_STANDARD_REQUIRED ON)" << "\n";
-        file << "" << "\n";
-        file << "add_library(test_module)" << "\n";
-        file << "target_sources(test_module" << "\n";
-        file << "    PUBLIC" << "\n";
-        file << "        FILE_SET CXX_MODULES" << "\n";
-        file << "        FILES" << "\n";
-        file << "            test.cppm" << "\n";
-        file << ")" << "\n";
-        file << "]=])" << "\n";
-        file << "" << "\n";
-        file << "file(WRITE \"${CXX_MODULE_TEST_DIR}/test.cppm\" [=[" << "\n";
-        file << "export module test;" << "\n";
-        file << "" << "\n";
-        file << "export int answer()" << "\n";
-        file << "{" << "\n";
-        file << "    return 42;" << "\n";
-        file << "}" << "\n";
-        file << "]=])" << "\n";
-        file << "" << "\n";
-        file << "try_compile(" << "\n";
-        file << "    HAS_CXX20_MODULES" << "\n";
-        file << "    \"${CMAKE_BINARY_DIR}/cxx_module_test_build\"" << "\n";
-        file << "    \"${CXX_MODULE_TEST_DIR}\"" << "\n";
-        file << "    cxx_module_test" << "\n";
-        file << "    OUTPUT_VARIABLE CXX_MODULE_TEST_OUTPUT" << "\n";
-        file << ")" << "\n";
-    }
+    helper::dump_all(cmake_path / "build_benchmarks.cmake", embed::cmake::build_benchmarks_cmake);
+    helper::dump_all(cmake_path / "build_binary.cmake", embed::cmake::build_binary_cmake);
+    helper::dump_all(cmake_path / "build_examples.cmake", embed::cmake::build_examples_cmake);
+    helper::dump_all(cmake_path / "build_tests.cmake", embed::cmake::build_tests_cmake);
+    helper::dump_all(cmake_path / "command_targets.cmake", embed::cmake::command_targets_cmake);
+    helper::dump_all(cmake_path / "compilation.cmake", embed::cmake::compilation_cmake);
+    helper::dump_all(cmake_path / "fetch.cmake", embed::cmake::fetch_cmake);
+    helper::dump_all(cmake_path / "headers.cmake", embed::cmake::headers_cmake);
+    helper::dump_all(cmake_path / "modules.cmake", embed::cmake::modules_cmake);
+    helper::dump_all(cmake_path / "module_test_capability.cmake", embed::cmake::module_test_capability_cmake);
 
     return EXIT_SUCCESS;
 }

@@ -1,13 +1,13 @@
 file(
     GLOB_RECURSE balk_modules_files CONFIGURE_DEPENDS
-   "${BALK_DIRECTORY_SOURCE}/*.cppm"
+   "${BALK_DIRECTORIES_SOURCE}/*.cppm"
 )
 
 if(balk_modules_files)
     # only true when balk_modules_files detects one or more files
 
     # make sure compiler supports modules
-    include("${BALK_DIRECTORY_CMAKE}/module_test_capability.cmake")
+    include("${BALK_DIRECTORIES_CMAKE}/module_test_capability.cmake")
 
     if(balk_modules_files)
         add_library(balk_modules)

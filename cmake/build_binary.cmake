@@ -1,8 +1,8 @@
-if("${BALK_BINARY}" STREQUAL "executable")
+if("${BALK_SETTINGS_BINARY}" STREQUAL "executable")
     add_executable(${PROJECT_NAME})
-elseif("${BALK_BINARY}" STREQUAL "archive")
+elseif("${BALK_SETTINGS_BINARY}" STREQUAL "archive")
     add_library(${PROJECT_NAME} STATIC)
-elseif("${BALK_BINARY}" STREQUAL "shared")
+elseif("${BALK_SETTINGS_BINARY}" STREQUAL "shared")
     add_library(${PROJECT_NAME} SHARED)
 else()
     message(WARNING "Not building an executable, archive, or shared binary! Maybe an issue!")
@@ -14,8 +14,8 @@ file(
     GLOB_RECURSE
     balk_source_files
     CONFIGURE_DEPENDS
-    "${BALK_DIRECTORY_SOURCE}/*.cpp"
-    "${BALK_DIRECTORY_SOURCE}/*.cc"
+    "${BALK_DIRECTORIES_SOURCE}/*.cpp"
+    "${BALK_DIRECTORIES_SOURCE}/*.cc"
 )
 target_sources(
     ${PROJECT_NAME}

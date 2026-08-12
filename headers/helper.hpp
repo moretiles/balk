@@ -87,4 +87,61 @@ std::string dump_command_line(const std::optional<std::string> maybe_explanation
 
     return return_me;
 }
+
+std::string load_all(const std::filesystem::path& path) {
+    std::ifstream file(path, std::ios::binary);
+
+    if (!file) {
+        const auto io_error = std::make_error_code(std::errc::io_error);
+        throw std::system_error(io_error, "load_all: " + path.string());
+    }
+
+    file.seekg(0, std::ios::end);
+    const auto size = file.tellg();
+
+    if (size < 0) {
+        const auto io_error = std::make_error_code(std::errc::io_error);
+        throw std::system_error(io_error, "load_all: " + path.string());
+    }
+
+    std::string result(static_cast<std::size_t>(size), '\0');
+
+    file.seekg(0, std::ios::beg);
+    if (!(file.read(result.data(), result.size()))) {
+        const auto io_error = std::make_error_code(std::errc::io_error);
+        throw std::system_error(io_error, "load_all: " + path.string());
+    }
+
+    return result;
+}
+
+void dump_all(const std::filesystem::path& path, const std::string &data) {
+    std::ofstream file(path, std::ios::binary | std::ios::trunc);
+
+    if (!file) {
+        const auto io_error = std::make_error_code(std::errc::io_error);
+        throw std::system_error(io_error, "dump_all: " + path.string());
+    }
+
+    file.write(data.data(), static_cast<std::streamsize>(data.size()));
+    if (!file) {
+        const auto io_error = std::make_error_code(std::errc::io_error);
+        throw std::system_error(io_error, "dump_all: " + path.string());
+    }
+}
+
+void dump_all(const std::filesystem::path& path, const std::string_view &data) {
+    std::ofstream file(path, std::ios::binary | std::ios::trunc);
+
+    if (!file) {
+        const auto io_error = std::make_error_code(std::errc::io_error);
+        throw std::system_error(io_error, "dump_all: " + path.string());
+    }
+
+    file.write(data.data(), static_cast<std::streamsize>(data.size()));
+    if (!file) {
+        const auto io_error = std::make_error_code(std::errc::io_error);
+        throw std::system_error(io_error, "dump_all: " + path.string());
+    }
+}
 }

@@ -5,7 +5,7 @@ add_library(balk_FetchContent INTERFACE)
 
 file(
     GLOB_RECURSE CMAKE_FETCH_FILES CONFIGURE_DEPENDS
-    "${BALK_DIRECTORY_CMAKE}/fetch/*.cmake"
+    "${BALK_DIRECTORIES_CMAKE}/fetch/*.cmake"
 )
 
 foreach(CMAKE_FETCH_FILE ${CMAKE_FETCH_FILES})

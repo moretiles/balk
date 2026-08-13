@@ -9,16 +9,6 @@ add_custom_target(
 )
 
 add_custom_target(
-    test
-    DEPENDS test
-)
-
-add_custom_target(
-    example
-    DEPENDS examples
-)
-
-add_custom_target(
     export
     COMMAND ${CMAKE_COMMAND} -E make_directory "${BALK_DIRECTORIES_EXPORT}/${BALK_PROFILE}/${PROJECT_NAME}"
     COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/${PROJECT_NAME}" "${BALK_DIRECTORIES_EXPORT}/${BALK_PROFILE}/${PROJECT_NAME}"

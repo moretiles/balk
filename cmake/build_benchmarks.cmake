@@ -5,6 +5,8 @@ if(EXISTS "${BALK_DIRECTORIES_BENCHMARKS}")
         CONFIGURE_DEPENDS
         "${BALK_DIRECTORIES_BENCHMARKS}/*.cpp"
         "${BALK_DIRECTORIES_BENCHMARKS}/*.cc"
+        "${BALK_DIRECTORIES_BENCHMARKS}/*.cxx"
+        "${BALK_DIRECTORIES_BENCHMARKS}/*.c++"
     )
 
     add_custom_target(benchmarks)
@@ -20,6 +22,8 @@ if(EXISTS "${BALK_DIRECTORIES_BENCHMARKS}")
         # Strip the .cpp extension
         string(REGEX REPLACE "\\.cpp$" "" target_rel_path "${rel_path}")
         string(REGEX REPLACE "\\.cc$" "" target_rel_path "${rel_path}")
+        string(REGEX REPLACE "\\.cxx$" "" target_rel_path "${rel_path}")
+        string(REGEX REPLACE "\\.c\\+\\+$" "" target_rel_path "${rel_path}")
     
         # Replace slashes with safe characters if needed
         string(REPLACE "/" "_" target_name "benchmark_${target_rel_path}")

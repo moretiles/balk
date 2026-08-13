@@ -5,6 +5,8 @@ if(EXISTS "${BALK_DIRECTORIES_EXAMPLES}")
         CONFIGURE_DEPENDS
         "${BALK_DIRECTORIES_EXAMPLES}/*.cpp"
         "${BALK_DIRECTORIES_EXAMPLES}/*.cc"
+        "${BALK_DIRECTORIES_EXAMPLES}/*.cxx"
+        "${BALK_DIRECTORIES_EXAMPLES}/*.c++"
     )
 
     add_custom_target(examples)
@@ -20,6 +22,8 @@ if(EXISTS "${BALK_DIRECTORIES_EXAMPLES}")
         # Strip the .cpp extension
         string(REGEX REPLACE "\\.cpp$" "" target_rel_path "${rel_path}")
         string(REGEX REPLACE "\\.cc$" "" target_rel_path "${rel_path}")
+        string(REGEX REPLACE "\\.cxx$" "" target_rel_path "${rel_path}")
+        string(REGEX REPLACE "\\.c\\+\\+$" "" target_rel_path "${rel_path}")
     
         # Replace slashes with safe characters if needed
         string(REPLACE "/" "_" target_name "example_${target_rel_path}")

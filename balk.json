@@ -105,7 +105,7 @@
       "path_within_build": "debug",
       "cmake_build_type": "Debug",
       "override_settings": {
-        "build-system": "makefile"
+        "build_system": "makefile"
       }
     },
     "release": {

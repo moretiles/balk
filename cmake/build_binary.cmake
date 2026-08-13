@@ -5,7 +5,7 @@ elseif("${BALK_SETTINGS_BINARY}" STREQUAL "archive")
 elseif("${BALK_SETTINGS_BINARY}" STREQUAL "shared")
     add_library(${PROJECT_NAME} SHARED)
 else()
-    message(WARNING "Not building an executable, archive, or shared binary! Maybe an issue!")
+    message(FATAL_ERROR "Not building an executable, archive, or shared binary! Maybe an issue!")
 endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${balk_header_files}")
@@ -16,6 +16,8 @@ file(
     CONFIGURE_DEPENDS
     "${BALK_DIRECTORIES_SOURCE}/*.cpp"
     "${BALK_DIRECTORIES_SOURCE}/*.cc"
+    "${BALK_DIRECTORIES_SOURCE}/*.cxx"
+    "${BALK_DIRECTORIES_SOURCE}/*.c++"
 )
 target_sources(
     ${PROJECT_NAME}

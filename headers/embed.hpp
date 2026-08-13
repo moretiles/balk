@@ -232,6 +232,8 @@ if(EXISTS "${BALK_DIRECTORIES_BENCHMARKS}")
         CONFIGURE_DEPENDS
         "${BALK_DIRECTORIES_BENCHMARKS}/*.cpp"
         "${BALK_DIRECTORIES_BENCHMARKS}/*.cc"
+        "${BALK_DIRECTORIES_BENCHMARKS}/*.cxx"
+        "${BALK_DIRECTORIES_BENCHMARKS}/*.c++"
     )
 
     add_custom_target(benchmarks)
@@ -247,6 +249,8 @@ if(EXISTS "${BALK_DIRECTORIES_BENCHMARKS}")
         # Strip the .cpp extension
         string(REGEX REPLACE "\\.cpp$" "" target_rel_path "${rel_path}")
         string(REGEX REPLACE "\\.cc$" "" target_rel_path "${rel_path}")
+        string(REGEX REPLACE "\\.cxx$" "" target_rel_path "${rel_path}")
+        string(REGEX REPLACE "\\.c\\+\\+$" "" target_rel_path "${rel_path}")
     
         # Replace slashes with safe characters if needed
         string(REPLACE "/" "_" target_name "benchmark_${target_rel_path}")
@@ -285,7 +289,7 @@ elseif("${BALK_SETTINGS_BINARY}" STREQUAL "archive")
 elseif("${BALK_SETTINGS_BINARY}" STREQUAL "shared")
     add_library(${PROJECT_NAME} SHARED)
 else()
-    message(WARNING "Not building an executable, archive, or shared binary! Maybe an issue!")
+    message(FATAL_ERROR "Not building an executable, archive, or shared binary! Maybe an issue!")
 endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${balk_header_files}")
@@ -296,6 +300,8 @@ file(
     CONFIGURE_DEPENDS
     "${BALK_DIRECTORIES_SOURCE}/*.cpp"
     "${BALK_DIRECTORIES_SOURCE}/*.cc"
+    "${BALK_DIRECTORIES_SOURCE}/*.cxx"
+    "${BALK_DIRECTORIES_SOURCE}/*.c++"
 )
 target_sources(
     ${PROJECT_NAME}
@@ -317,6 +323,8 @@ if(EXISTS "${BALK_DIRECTORIES_EXAMPLES}")
         CONFIGURE_DEPENDS
         "${BALK_DIRECTORIES_EXAMPLES}/*.cpp"
         "${BALK_DIRECTORIES_EXAMPLES}/*.cc"
+        "${BALK_DIRECTORIES_EXAMPLES}/*.cxx"
+        "${BALK_DIRECTORIES_EXAMPLES}/*.c++"
     )
 
     add_custom_target(examples)
@@ -332,6 +340,8 @@ if(EXISTS "${BALK_DIRECTORIES_EXAMPLES}")
         # Strip the .cpp extension
         string(REGEX REPLACE "\\.cpp$" "" target_rel_path "${rel_path}")
         string(REGEX REPLACE "\\.cc$" "" target_rel_path "${rel_path}")
+        string(REGEX REPLACE "\\.cxx$" "" target_rel_path "${rel_path}")
+        string(REGEX REPLACE "\\.c\\+\\+$" "" target_rel_path "${rel_path}")
     
         # Replace slashes with safe characters if needed
         string(REPLACE "/" "_" target_name "example_${target_rel_path}")
@@ -370,6 +380,8 @@ if(EXISTS "${BALK_DIRECTORIES_TESTS}")
         CONFIGURE_DEPENDS
         "${BALK_DIRECTORIES_TESTS}/*.cpp"
         "${BALK_DIRECTORIES_TESTS}/*.cc"
+        "${BALK_DIRECTORIES_TESTS}/*.cxx"
+        "${BALK_DIRECTORIES_TESTS}/*.c++"
     )
 
     add_custom_target(tests)
@@ -385,6 +397,8 @@ if(EXISTS "${BALK_DIRECTORIES_TESTS}")
         # Strip the .cpp extension
         string(REGEX REPLACE "\\.cpp$" "" target_rel_path "${rel_path}")
         string(REGEX REPLACE "\\.cc$" "" target_rel_path "${rel_path}")
+        string(REGEX REPLACE "\\.cxx$" "" target_rel_path "${rel_path}")
+        string(REGEX REPLACE "\\.c\\+\\+$" "" target_rel_path "${rel_path}")
     
         # Replace slashes with safe characters if needed
         string(REPLACE "/" "_" target_name "test_${target_rel_path}")
@@ -427,16 +441,6 @@ add_custom_target(
 )
 
 add_custom_target(
-    test
-    DEPENDS test
-)
-
-add_custom_target(
-    example
-    DEPENDS examples
-)
-
-add_custom_target(
     export
     COMMAND ${CMAKE_COMMAND} -E make_directory "${BALK_DIRECTORIES_EXPORT}/${BALK_PROFILE}/${PROJECT_NAME}"
     COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/${PROJECT_NAME}" "${BALK_DIRECTORIES_EXPORT}/${BALK_PROFILE}/${PROJECT_NAME}"
@@ -462,9 +466,9 @@ const constexpr inline std::string_view compilation_cmake = R"EOF(
 if(${BALK_TOOLCHAIN} STREQUAL "msvc")
     add_compile_options(/W4)
 elseif(${BALK_TOOLCHAIN} STREQUAL "gcc")
-    add_compile_options(-Wall -Wextra -Wextra)
+    add_compile_options(-Wall -Wextra -Wpedantic)
 elseif(${BALK_TOOLCHAIN} STREQUAL "clang")
-    add_compile_options(-Wall -Wextra -Wextra)
+    add_compile_options(-Wall -Wextra -Wpedantic)
 else()
 endif()
 )EOF";
@@ -501,27 +505,25 @@ if(balk_modules_files)
     # make sure compiler supports modules
     include("${BALK_DIRECTORIES_CMAKE}/module_test_capability.cmake")
 
-    if(balk_modules_files)
-        add_library(balk_modules)
+    add_library(balk_modules)
 
-        target_compile_features(balk_modules PUBLIC cxx_std_20)
+    target_compile_features(balk_modules PUBLIC cxx_std_20)
 
-        target_include_directories(balk_modules PRIVATE "${balk_header_files}")
+    target_include_directories(balk_modules PRIVATE "${balk_header_files}")
 
-        target_sources(
-            balk_modules
-            PUBLIC
-            FILE_SET CXX_MODULES
-            TYPE CXX_MODULES
-            FILES ${balk_modules_files}
-        )
+    target_sources(
+        balk_modules
+        PUBLIC
+        FILE_SET CXX_MODULES
+        TYPE CXX_MODULES
+        FILES ${balk_modules_files}
+    )
 
-        target_link_libraries(balk_modules PRIVATE balk_FetchContent)
-    else()
-        add_library(balk_modules INTERFACE)
+    target_link_libraries(balk_modules PRIVATE balk_FetchContent)
+else()
+    add_library(balk_modules INTERFACE)
 
-        target_compile_features(balk_modules INTERFACE cxx_std_20)
-    endif()
+    target_compile_features(balk_modules INTERFACE cxx_std_20)
 endif()
 )EOF";
 
